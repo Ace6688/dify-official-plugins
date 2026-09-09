@@ -88,8 +88,9 @@ class AihubmixLargeLanguageModel(OAICompatLargeLanguageModel):
         
         # 检查模型名称是否以 "claude" 开头
         if model.startswith("claude"):
-            # 按请求构造并传入 provider 的模型 schema，get_price 才能按 YAML 定价计费
-            anthropic_llm = AnthropicLargeLanguageModel(self.model_schemas)
+            # 注入 provider 的模型 schema，get_price 才能按 YAML 定价计费。
+            # 不按请求新建实例：thinking 块的回放依赖该实例状态跨工具调用续轮存活（anthropic.py:1131/1405）
+            anthropic_llm.model_schemas = self.model_schemas
             return anthropic_llm._invoke(model, credentials, prompt_messages, model_parameters, tools, stop, stream, user)
         
         # 检查模型名称是否以 "gemini" 开头且不以 "-nothink" 或 "-search" 结尾
